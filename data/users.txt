@@ -1,2 +1,0 @@
-anaphygon@protonmail.com|password|Admin|ADMIN|N/A|false
-lisvindanu015@gmail.com|lisvindanu|lisvindanu|USER|N/A|false

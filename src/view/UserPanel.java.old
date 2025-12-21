@@ -1,0 +1,193 @@
+package view;
+
+import model.User;
+import controller.UserController;
+import util.InputUtil;
+import util.ValidationUtil;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class UserPanel extends JPanel {
+    private JTextField txtUsername, txtEmail;
+    private JRadioButton rbMale, rbFemale;
+    private JCheckBox chkPremium, chkNotifications;
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private UserController userController;
+
+    public UserPanel(UserController controller) {
+        this.userController = controller;
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        add(createFormPanel(), BorderLayout.NORTH);
+        add(createTablePanel(), BorderLayout.CENTER);
+    }
+
+    private JPanel createFormPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("User Registration"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Username
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Username:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        txtUsername = new JTextField(20);
+        panel.add(txtUsername, gbc);
+
+        // Email
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        panel.add(new JLabel("Email:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        txtEmail = new JTextField(20);
+        panel.add(txtEmail, gbc);
+
+        // Gender (JRadioButton)
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        panel.add(new JLabel("Gender:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        JPanel genderPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        rbMale = new JRadioButton("Male");
+        rbFemale = new JRadioButton("Female");
+        ButtonGroup genderGroup = new ButtonGroup();
+        genderGroup.add(rbMale);
+        genderGroup.add(rbFemale);
+        genderPanel.add(rbMale);
+        genderPanel.add(rbFemale);
+        rbMale.setSelected(true);
+        panel.add(genderPanel, gbc);
+
+        // Subscription & Notifications (JCheckBox)
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
+        panel.add(new JLabel("Options:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        chkPremium = new JCheckBox("Premium Account");
+        chkNotifications = new JCheckBox("Enable Notifications");
+        optionsPanel.add(chkPremium);
+        optionsPanel.add(chkNotifications);
+        panel.add(optionsPanel, gbc);
+
+        // Interests (JCheckBox)
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
+        panel.add(new JLabel("Interests:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        JPanel interestsPanel = new JPanel(new GridLayout(2, 3));
+        JCheckBox chkAction = new JCheckBox("Action");
+        JCheckBox chkDrama = new JCheckBox("Drama");
+        JCheckBox chkComedy = new JCheckBox("Comedy");
+        JCheckBox chkHorror = new JCheckBox("Horror");
+        JCheckBox chkSciFi = new JCheckBox("Sci-Fi");
+        JCheckBox chkRomance = new JCheckBox("Romance");
+        interestsPanel.add(chkAction);
+        interestsPanel.add(chkDrama);
+        interestsPanel.add(chkComedy);
+        interestsPanel.add(chkHorror);
+        interestsPanel.add(chkSciFi);
+        interestsPanel.add(chkRomance);
+        panel.add(interestsPanel, gbc);
+
+        // Buttons
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton btnAdd = new JButton("Add User");
+        JButton btnClear = new JButton("Clear");
+        JButton btnDelete = new JButton("Delete Selected");
+
+        btnAdd.addActionListener(e -> addUser(new JCheckBox[]{chkAction, chkDrama, chkComedy, chkHorror, chkSciFi, chkRomance}));
+        btnClear.addActionListener(e -> clearForm(new JCheckBox[]{chkAction, chkDrama, chkComedy, chkHorror, chkSciFi, chkRomance}));
+        btnDelete.addActionListener(e -> deleteUser());
+
+        btnPanel.add(btnAdd);
+        btnPanel.add(btnClear);
+        btnPanel.add(btnDelete);
+        panel.add(btnPanel, gbc);
+
+        return panel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("User List"));
+
+        String[] columns = {"Username", "Email", "Gender", "Account Type", "Notifications", "Interests"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void addUser(JCheckBox[] interestCheckboxes) {
+        try {
+            String username = InputUtil.getTextField(txtUsername, "Username");
+            String email = InputUtil.getTextField(txtEmail, "Email");
+
+            if (!ValidationUtil.isValidEmail(email)) {
+                ValidationUtil.showError(this, "Please enter a valid email address!");
+                return;
+            }
+
+            String gender = rbMale.isSelected() ? "Male" : "Female";
+            boolean isPremium = chkPremium.isSelected();
+            boolean notificationsEnabled = chkNotifications.isSelected();
+
+            List<String> interests = new ArrayList<>();
+            for (JCheckBox cb : interestCheckboxes) {
+                if (cb.isSelected()) {
+                    interests.add(cb.getText());
+                }
+            }
+
+            if (interests.isEmpty()) {
+                ValidationUtil.showError(this, "Please select at least one interest!");
+                return;
+            }
+
+            User user = new User(username, email, gender, isPremium, notificationsEnabled, interests);
+            userController.addUser(user);
+            tableModel.addRow(user.toTableRow());
+            clearForm(interestCheckboxes);
+            ValidationUtil.showSuccess(this, "User added successfully!");
+        } catch (Exception ex) {
+            ValidationUtil.showError(this, ex.getMessage());
+        }
+    }
+
+    private void clearForm(JCheckBox[] interestCheckboxes) {
+        InputUtil.clearTextField(txtUsername, txtEmail);
+        rbMale.setSelected(true);
+        chkPremium.setSelected(false);
+        chkNotifications.setSelected(false);
+        for (JCheckBox cb : interestCheckboxes) {
+            cb.setSelected(false);
+        }
+    }
+
+    private void deleteUser() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            if (ValidationUtil.confirmAction(this, "Are you sure you want to delete this user?")) {
+                userController.deleteUser(selectedRow);
+                tableModel.removeRow(selectedRow);
+                ValidationUtil.showSuccess(this, "User deleted successfully!");
+            }
+        } else {
+            ValidationUtil.showError(this, "Please select a user to delete!");
+        }
+    }
+}

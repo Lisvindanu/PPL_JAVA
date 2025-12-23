@@ -1,0 +1,236 @@
+# Film Management System
+
+**Version:** 2.0 (Auth Edition)
+**Platform:** Java Desktop Application (Swing)
+**Author:** lisvindanu
+
+## Deskripsi Aplikasi
+
+Film Management System adalah aplikasi desktop berbasis Java yang memungkinkan pengguna untuk mengelola koleksi film dan membuat playlist pribadi. Aplikasi ini terintegrasi dengan The Movie Database (TMDB) API untuk mengambil informasi film secara real-time.
+
+### Fitur Utama
+
+- **User Authentication**
+  - Login & Register system
+  - Role-based access control (Admin/User)
+  - Session management
+
+- **Film Management** (Admin)
+  - Tambah film dengan TMDB ID
+  - Edit dan hapus film
+  - Soft delete (visibility control)
+  - View semua film dalam sistem
+
+- **Playlist Management** (User)
+  - Buat playlist pribadi
+  - Tambah/hapus film ke playlist
+  - Kelola multiple playlists
+  - View film dalam playlist
+
+- **TMDB Integration**
+  - Auto-fetch movie details dari TMDB API
+  - Informasi lengkap: title, director, genre, year, synopsis
+
+- **Data Persistence**
+  - File-based storage (text files)
+  - Auto-save setiap perubahan
+
+## Struktur Direktori
+
+```
+Latihan/
+├── src/
+│   ├── main/
+│   │   └── MainApp.java              # Entry point aplikasi
+│   │
+│   ├── model/                         # Data Models
+│   │   ├── User.java                  # Model user (email, password, role)
+│   │   ├── Film.java                  # Model film (id, title, director, etc.)
+│   │   └── Playlist.java              # Model playlist
+│   │
+│   ├── view/                          # GUI Components (Swing)
+│   │   ├── LoginPanel.java            # Panel login & register
+│   │   ├── HomePanel.java             # Panel home user (daftar film)
+│   │   ├── AdminPanel.java            # Panel admin (CRUD film & users)
+│   │   ├── MyPlaylistPanel.java       # Panel playlist user
+│   │   └── FilmPanel.java             # Panel detail film
+│   │
+│   ├── controller/                    # Business Logic
+│   │   ├── UserController.java        # Handle user CRUD
+│   │   ├── FilmController.java        # Handle film CRUD
+│   │   └── PlaylistController.java    # Handle playlist CRUD
+│   │
+│   ├── util/                          # Utilities
+│   │   ├── AuthService.java           # Authentication service
+│   │   ├── FileManager.java           # File I/O operations
+│   │   ├── ValidationUtil.java        # Input validation
+│   │   ├── InputUtil.java             # Input helpers
+│   │   └── TMDBService.java           # TMDB API integration
+│   │
+│   └── data/                          # Data Storage (text files)
+│       ├── users.txt                  # User data
+│       ├── films.txt                  # Film data
+│       └── playlists.txt              # Playlist data
+│
+├── javadocs/                          # Generated JavaDoc
+├── out/                               # Compiled classes
+├── .idea/                             # IntelliJ IDEA config
+├── .gitignore
+├── Latihan.iml                        # IntelliJ project file
+└── README.md                          # This file
+```
+
+## Arsitektur Aplikasi
+
+Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
+
+### Model Layer
+- `User.java` - Representasi data user dengan role-based access
+- `Film.java` - Representasi data film dengan metadata lengkap
+- `Playlist.java` - Representasi playlist dengan daftar film
+
+### View Layer (Swing GUI)
+- `LoginPanel` - UI untuk login & register
+- `AdminPanel` - UI untuk admin (manage films & users)
+- `HomePanel` - UI untuk user melihat daftar film
+- `MyPlaylistPanel` - UI untuk manage playlist
+- `FilmPanel` - UI untuk detail film
+
+### Controller Layer
+- `UserController` - Business logic untuk user management
+- `FilmController` - Business logic untuk film management
+- `PlaylistController` - Business logic untuk playlist management
+
+### Utility Layer
+- `AuthService` - Handle authentication & authorization
+- `FileManager` - Handle file I/O operations
+- `ValidationUtil` - Input validation & dialog helpers
+- `TMDBService` - Integration dengan TMDB API
+
+## Teknologi yang Digunakan
+
+- **Java SE** - Core language
+- **Swing** - GUI framework
+- **TMDB API** - Movie database integration
+- **File I/O** - Data persistence menggunakan text files
+- **IntelliJ IDEA** - IDE
+
+## Cara Menjalankan Aplikasi
+
+### Prerequisites
+- Java Development Kit (JDK) 8 atau lebih tinggi
+- IntelliJ IDEA (optional, bisa juga command line)
+- Internet connection (untuk fetch data dari TMDB)
+
+### Setup & Run
+
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/Lisvindanu/PPL_JAVA.git
+   cd PPL_JAVA
+   ```
+
+2. **Buka di IntelliJ IDEA**
+   - File → Open → pilih folder project
+   - Wait sampai project indexed
+
+3. **Run aplikasi**
+   - Buka `src/main/MainApp.java`
+   - Klik kanan → Run 'MainApp.main()'
+
+   Atau via terminal:
+   ```bash
+   javac src/main/MainApp.java
+   java -cp src main.MainApp
+   ```
+
+4. **Login**
+   - Default admin: (buat di register dengan role ADMIN)
+   - Atau register user baru
+
+## User Guide
+
+### Sebagai User:
+1. **Register** - Buat akun baru dengan email & password
+2. **Login** - Login dengan credentials
+3. **Browse Films** - Lihat daftar film di Home panel
+4. **Create Playlist** - Buat playlist di My Playlists
+5. **Add Films** - Tambahkan film ke playlist
+
+### Sebagai Admin:
+1. **Login** dengan akun admin
+2. **Manage Films** - Tambah/edit/hapus film
+3. **Add Film via TMDB** - Input TMDB movie ID untuk auto-fetch
+4. **Manage Users** - Lihat daftar users (future feature)
+
+## Data Format
+
+### users.txt
+```
+email|password|username|role|gender|isPremium
+```
+
+### films.txt
+```
+id|title|director|genre|year|synopsis|isVisible
+```
+
+### playlists.txt
+```
+playlistName|userEmail|filmId1,filmId2,filmId3
+```
+
+## API Integration
+
+Aplikasi menggunakan **The Movie Database (TMDB) API** untuk mengambil data film.
+
+### Endpoints yang digunakan:
+- `/movie/{movie_id}` - Get movie details
+- `/movie/{movie_id}/credits` - Get movie credits (director)
+
+### Cara mendapatkan TMDB ID:
+1. Buka https://www.themoviedb.org/
+2. Cari film yang diinginkan
+3. Copy ID dari URL (contoh: `550` untuk Fight Club)
+
+## Dokumentasi Lengkap
+
+JavaDoc lengkap tersedia di folder `/javadocs/`.
+Buka `javadocs/index.html` di browser untuk melihat dokumentasi API.
+
+## Known Issues
+
+- API key masih hardcoded di `TMDBService.java` (security issue)
+- Parsing JSON masih manual (tidak menggunakan library)
+- Error handling bisa ditingkatkan
+- Belum ada unit tests
+
+## Pembagian Tugas Maintenance
+
+Untuk detail pembagian tugas maintenance tim, lihat:
+**[📋 Pembagian Tugas Maintenance](https://hackmd.io/@ZUbOwxE3S22BUyx4l-D_Ng/Hy38dUOQbl)**
+
+## Future Improvements
+
+Planning untuk maintenance v3.0 sudah dibuat oleh tim.
+
+## Contributing
+
+Anggota Tim Development:
+- Rafli Ramdhani (223040010)
+- Bhadrika Aryaputra Hermawan (223040018)
+- Lisvindanu (223040038)
+- Ilham Akmal Rafi Pramudya
+
+## License
+
+Educational project untuk Tugas Besar Pemeliharaan Perangkat Lunak.
+
+## Contact
+
+Repository: https://github.com/Lisvindanu/PPL_JAVA
+
+---
+
+**Last Updated:** 
+**Version:** 2.0

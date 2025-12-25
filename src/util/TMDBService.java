@@ -74,7 +74,7 @@ public class TMDBService {
      * @return objek MovieData berisi informasi film
      * @throws Exception jika terjadi error saat API call atau parsing
      */
-    public static MovieData fetchMovieData(String movieId) throws Exception {
+    public static MovieData fetchMovieData(String movieId) {
         // Check cache first
         if (movieCache.containsKey(movieId)) {
             return movieCache.get(movieId);
@@ -127,25 +127,33 @@ public class TMDBService {
      * @return response body sebagai string
      * @throws Exception jika HTTP status bukan 200 atau terjadi error I/O
      */
-    private static String getStringFromURL(String urlString) throws Exception {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("Accept", "application/json");
+    private static String getStringFromURL(String urlString) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
 
-        if (conn.getResponseCode() != 200) {
-            throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
+            }
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+                return response.toString();
+            }
+        } catch (Exception e) {
+            System.err.println("Error requesting URL: " + urlString);
+            throw new RuntimeException("Failed to fetch data from TMDB", e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            response.append(line);
-        }
-        br.close();
-        conn.disconnect();
-
-        return response.toString();
     }
 }

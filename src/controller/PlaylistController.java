@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Controller untuk mengelola operasi CRUD data Playlist.
  * Menangani pembacaan dan penulisan data playlist ke file storage.
@@ -15,6 +18,7 @@ import java.util.stream.Collectors;
  * @version 2.0
  */
 public class PlaylistController {
+    private static final Logger logger = LoggerFactory.getLogger(PlaylistController.class);
 
     /**
      * Konstruktor PlaylistController.
@@ -60,9 +64,11 @@ public class PlaylistController {
      * @param playlist objek Playlist yang akan ditambahkan
      */
     public void addPlaylist(Playlist playlist) {
+        logger.info("Adding new playlist: {} for user: {}", playlist.getName(), playlist.getOwnerEmail());
         List<Playlist> playlists = loadPlaylists();
         playlists.add(playlist);
         savePlaylists(playlists);
+        logger.info("Playlist added successfully: {}", playlist.getName());
     }
 
     /**
@@ -72,16 +78,24 @@ public class PlaylistController {
      * @param playlist objek Playlist dengan data baru
      */
     public void updatePlaylist(Playlist playlist) {
+        logger.info("Updating playlist: {} for user: {}", playlist.getName(), playlist.getOwnerEmail());
         List<Playlist> playlists = loadPlaylists();
         List<Playlist> updated = new ArrayList<>();
+        boolean found = false;
         for (Playlist p : playlists) {
             if (p.getName().equals(playlist.getName()) && p.getOwnerEmail().equals(playlist.getOwnerEmail())) {
                 updated.add(playlist);
+                found = true;
             } else {
                 updated.add(p);
             }
         }
         savePlaylists(updated);
+        if (found) {
+            logger.info("Playlist updated successfully: {}", playlist.getName());
+        } else {
+            logger.warn("Failed to update playlist. Not found: {}", playlist.getName());
+        }
     }
 
     /**
@@ -91,9 +105,15 @@ public class PlaylistController {
      * @param ownerEmail email pemilik playlist
      */
     public void deletePlaylist(String playlistName, String ownerEmail) {
+        logger.info("Deleting playlist: {} for user: {}", playlistName, ownerEmail);
         List<Playlist> playlists = loadPlaylists();
-        playlists.removeIf(p -> p.getName().equals(playlistName) && p.getOwnerEmail().equals(ownerEmail));
+        boolean removed = playlists.removeIf(p -> p.getName().equals(playlistName) && p.getOwnerEmail().equals(ownerEmail));
         savePlaylists(playlists);
+        if (removed) {
+            logger.info("Playlist deleted successfully: {}", playlistName);
+        } else {
+            logger.warn("Failed to delete playlist. Not found: {}", playlistName);
+        }
     }
 
     /**

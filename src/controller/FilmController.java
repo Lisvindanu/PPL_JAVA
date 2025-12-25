@@ -5,6 +5,9 @@ import util.FileManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Controller untuk mengelola operasi CRUD data Film.
  * Menangani pembacaan dan penulisan data film ke file storage.
@@ -14,6 +17,7 @@ import java.util.List;
  * @version 2.0
  */
 public class FilmController {
+    private static final Logger logger = LoggerFactory.getLogger(FilmController.class);
 
     /**
      * Konstruktor FilmController.
@@ -60,6 +64,7 @@ public class FilmController {
      * @param film objek Film yang akan ditambahkan
      */
     public void addFilm(Film film) {
+        logger.info("Adding new film: {} ({})", film.getTitle(), film.getId());
         List<Film> films = loadFilms();
 
         // Check if film with same ID already exists
@@ -67,6 +72,9 @@ public class FilmController {
         if (!exists) {
             films.add(film);
             saveFilms(films);
+            logger.info("Film added successfully: {}", film.getTitle());
+        } else {
+            logger.warn("Failed to add film. ID already exists: {}", film.getId());
         }
     }
 
@@ -76,10 +84,14 @@ public class FilmController {
      * @param index posisi film yang akan dihapus (0-based)
      */
     public void deleteFilm(int index) {
+        logger.info("Deleting film at index: {}", index);
         List<Film> films = loadFilms();
         if (index >= 0 && index < films.size()) {
-            films.remove(index);
+            Film removedFilm = films.remove(index);
             saveFilms(films);
+            logger.info("Film deleted successfully: {}", removedFilm.getTitle());
+        } else {
+            logger.warn("Failed to delete film. Invalid index: {}", index);
         }
     }
 

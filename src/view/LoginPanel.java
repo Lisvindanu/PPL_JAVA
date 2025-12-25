@@ -88,22 +88,24 @@ public class LoginPanel extends JPanel {
         formGbc.gridy = 4; formGbc.gridwidth = 1;
         btnLogin = new JButton("Login");
         btnLogin.setBackground(new Color(52, 152, 219));
-        btnLogin.setForeground(Color.WHITE);
+        btnLogin.setForeground(Color.BLACK);
         btnLogin.setFont(new Font("Arial", Font.BOLD, 14));
         btnLogin.setFocusPainted(false);
         btnLogin.setOpaque(true);
         btnLogin.setBorderPainted(false);
+        btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnLogin.addActionListener(e -> handleLogin());
         formPanel.add(btnLogin, formGbc);
 
         formGbc.gridx = 1;
         btnRegister = new JButton("Register");
         btnRegister.setBackground(new Color(46, 204, 113));
-        btnRegister.setForeground(Color.WHITE);
+        btnRegister.setForeground(Color.BLACK);
         btnRegister.setFont(new Font("Arial", Font.BOLD, 14));
         btnRegister.setFocusPainted(false);
         btnRegister.setOpaque(true);
         btnRegister.setBorderPainted(false);
+        btnRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRegister.addActionListener(e -> showRegisterDialog());
         formPanel.add(btnRegister, formGbc);
 
@@ -123,18 +125,18 @@ public class LoginPanel extends JPanel {
         String password = new String(txtPassword.getPassword());
 
         if (email.isEmpty() || password.isEmpty()) {
-            ValidationUtil.showError(this, "Please fill all fields!");
+            ValidationUtil.showError(this, "Mohon isi semua field!");
             return;
         }
 
         User user = AuthService.login(email, password);
         if (user != null) {
-            ValidationUtil.showSuccess(this, "Welcome, " + user.getUsername() + "!");
+            ValidationUtil.showSuccess(this, "Selamat datang, " + user.getUsername() + "!");
             if (onLoginSuccess != null) {
                 onLoginSuccess.run();
             }
         } else {
-            ValidationUtil.showError(this, "Invalid email or password!");
+            ValidationUtil.showError(this, "Email atau password salah!");
         }
     }
 
@@ -169,42 +171,80 @@ public class LoginPanel extends JPanel {
         gbc.gridx = 1;
         registerDialog.add(txtRegPassword, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        // Password hint
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        JLabel passwordHint = new JLabel("<html><i><small>Min 8 karakter, harus ada huruf besar, kecil, dan angka</small></i></html>");
+        passwordHint.setForeground(new Color(127, 140, 141));
+        registerDialog.add(passwordHint, gbc);
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0; gbc.gridy = 4;
         registerDialog.add(new JLabel("Confirm Password:"), gbc);
         gbc.gridx = 1;
         registerDialog.add(txtConfirmPassword, gbc);
 
         JButton btnSubmit = new JButton("Register");
+        btnSubmit.setBackground(new Color(46, 204, 113));
+        btnSubmit.setForeground(Color.BLACK);
+        btnSubmit.setFont(new Font("Arial", Font.BOLD, 14));
+        btnSubmit.setFocusPainted(false);
+        btnSubmit.setOpaque(true);
+        btnSubmit.setBorderPainted(false);
+        btnSubmit.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         btnSubmit.addActionListener(e -> {
             String email = txtRegEmail.getText().trim();
             String username = txtRegUsername.getText().trim();
             String password = new String(txtRegPassword.getPassword());
             String confirmPassword = new String(txtConfirmPassword.getPassword());
 
-            if (email.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(registerDialog, "Please fill all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+            // Validate empty fields
+            if (ValidationUtil.isEmpty(email) || ValidationUtil.isEmpty(username) || ValidationUtil.isEmpty(password)) {
+                ValidationUtil.showError(registerDialog, "Mohon isi semua field!", "Validation Error");
                 return;
             }
 
+            // Validate email format
             if (!ValidationUtil.isValidEmail(email)) {
-                JOptionPane.showMessageDialog(registerDialog, "Invalid email format!", "Error", JOptionPane.ERROR_MESSAGE);
+                ValidationUtil.showValidationError(registerDialog, "Email", "Format email tidak valid");
                 return;
             }
 
+            // Validate username format
+            if (!ValidationUtil.isValidUsername(username)) {
+                ValidationUtil.showValidationError(registerDialog, "Username",
+                    "Harus alphanumeric, 3-20 karakter");
+                return;
+            }
+
+            // Validate password strength
+            if (!ValidationUtil.isValidPasswordStrength(password)) {
+                String strength = ValidationUtil.getPasswordStrengthDescription(password);
+                ValidationUtil.showValidationError(registerDialog, "Password",
+                    "Password terlalu lemah (Kekuatan: " + strength + ")\n" +
+                    "Minimal 8 karakter dengan kombinasi huruf besar, kecil, dan angka");
+                return;
+            }
+
+            // Validate password match
             if (!password.equals(confirmPassword)) {
-                JOptionPane.showMessageDialog(registerDialog, "Passwords do not match!", "Error", JOptionPane.ERROR_MESSAGE);
+                ValidationUtil.showValidationError(registerDialog, "Password",
+                    "Password dan konfirmasi tidak cocok");
                 return;
             }
 
+            // Register user
             if (AuthService.register(email, password, username)) {
-                JOptionPane.showMessageDialog(registerDialog, "Registration successful! Please login.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                ValidationUtil.showSuccess(registerDialog,
+                    "Registrasi berhasil! Silakan login dengan akun Anda.");
                 registerDialog.dispose();
             } else {
-                JOptionPane.showMessageDialog(registerDialog, "Email already exists!", "Error", JOptionPane.ERROR_MESSAGE);
+                ValidationUtil.showError(registerDialog,
+                    "Email sudah terdaftar! Gunakan email lain.", "Registration Failed");
             }
         });
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         registerDialog.add(btnSubmit, gbc);
 
         registerDialog.pack();

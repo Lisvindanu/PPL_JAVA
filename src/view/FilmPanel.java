@@ -30,6 +30,7 @@ public class FilmPanel extends JPanel {
     private JButton btnFetch;
     private JRadioButton rbVisible, rbHidden;
     private ButtonGroup visibilityGroup;
+    private String currentPosterPath; // Store poster path from TMDB fetch
 
     /**
      * Konstruktor FilmPanel.
@@ -142,15 +143,33 @@ public class FilmPanel extends JPanel {
         panel.add(visibilityPanel, gbc);
         gbc.gridwidth = 1;
 
-        // Buttons
+        // Buttons with styling
         gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 3;
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+
         JButton btnAdd = new JButton("Add Film");
         JButton btnClear = new JButton("Clear");
         JButton btnDelete = new JButton("Delete Selected");
 
+        // Style Add button (Green)
+        btnAdd.setBackground(new Color(46, 204, 113));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setFocusPainted(false);
+        btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnAdd.addActionListener(e -> addFilm());
+
+        // Style Clear button (Blue)
+        btnClear.setBackground(new Color(52, 152, 219));
+        btnClear.setForeground(Color.WHITE);
+        btnClear.setFocusPainted(false);
+        btnClear.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnClear.addActionListener(e -> clearForm());
+
+        // Style Delete button (Red)
+        btnDelete.setBackground(new Color(231, 76, 60));
+        btnDelete.setForeground(Color.WHITE);
+        btnDelete.setFocusPainted(false);
+        btnDelete.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDelete.addActionListener(e -> deleteFilm());
 
         btnPanel.add(btnAdd);
@@ -192,18 +211,35 @@ public class FilmPanel extends JPanel {
     /**
      * Mengambil data film dari TMDB API berdasarkan movie ID yang diinput.
      * Menggunakan SwingWorker untuk async operation agar UI tidak freeze.
-     * Menampilkan loading dialog selama proses fetching.
+     * Menampilkan loading dialog dengan progress bar selama proses fetching.
      * Setelah berhasil, semua field form akan terisi otomatis dengan data dari TMDB.
      */
     private void fetchMovieData() {
         try {
             String movieId = InputUtil.getTextField(txtMovieId, "TMDB Movie ID");
 
-            // Show loading
+            // Validate TMDB ID format
+            if (!ValidationUtil.isValidTMDBId(movieId)) {
+                ValidationUtil.showValidationError(this, "TMDB Movie ID", "Harus berupa angka");
+                return;
+            }
+
+            // Show enhanced loading dialog
             JDialog loadingDialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Loading...", true);
-            JLabel loadingLabel = new JLabel("Fetching movie data from TMDB...", SwingConstants.CENTER);
-            loadingDialog.add(loadingLabel);
-            loadingDialog.setSize(300, 100);
+            loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            JPanel loadingPanel = new JPanel(new BorderLayout(10, 10));
+            loadingPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JLabel loadingLabel = new JLabel("Mengambil data dari TMDB...", SwingConstants.CENTER);
+            loadingLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+            JProgressBar progressBar = new JProgressBar();
+            progressBar.setIndeterminate(true);
+
+            loadingPanel.add(loadingLabel, BorderLayout.NORTH);
+            loadingPanel.add(progressBar, BorderLayout.CENTER);
+
+            loadingDialog.add(loadingPanel);
+            loadingDialog.setSize(350, 120);
             loadingDialog.setLocationRelativeTo(this);
 
             SwingWorker<TMDBService.MovieData, Void> worker = new SwingWorker<>() {
@@ -221,6 +257,7 @@ public class FilmPanel extends JPanel {
                         txtDirector.setText(movieData.director);
                         txtYear.setText(String.valueOf(movieData.year));
                         txtSynopsis.setText(movieData.synopsis);
+                        currentPosterPath = movieData.posterPath; // Store poster path
 
                         // Set genre in combobox
                         for (int i = 0; i < cmbGenre.getItemCount(); i++) {
@@ -286,49 +323,57 @@ public class FilmPanel extends JPanel {
 
     /**
      * Menambahkan film baru ke database berdasarkan data di form.
-     * Melakukan validasi lengkap untuk semua field yang required.
+     * Melakukan validasi lengkap untuk semua field yang required dengan ValidationUtil.
      * Validasi berbeda antara TMDB mode dan manual mode.
      * Setelah berhasil ditambahkan, tabel akan di-refresh dan form dikosongkan.
      */
     private void addFilm() {
         try {
-            // Validate required fields
-            if (txtTitle.getText().trim().isEmpty()) {
-                ValidationUtil.showError(this, chkManualInput.isSelected() ?
-                    "Please fill in the title!" : "Please fetch movie data first!");
+            // Get and validate movie ID
+            String movieId = InputUtil.getTextField(txtMovieId, "Movie ID");
+
+            // Get and validate title with length check
+            String title = InputUtil.getTextField(txtTitle, "Title");
+            if (!ValidationUtil.isValidStringLength(title, 1, 200)) {
+                ValidationUtil.showValidationError(this, "Title",
+                    "Panjang judul harus antara 1-200 karakter");
                 return;
             }
 
-            String movieId = txtMovieId.getText().trim();
-            String title = txtTitle.getText().trim();
-            String director = txtDirector.getText().trim();
+            // Get and validate director
+            String director = InputUtil.getTextField(txtDirector, "Director");
+            if (!ValidationUtil.isValidStringLength(director, 1, 100)) {
+                ValidationUtil.showValidationError(this, "Director",
+                    "Panjang nama sutradara harus antara 1-100 karakter");
+                return;
+            }
+
             String genre = (String) cmbGenre.getSelectedItem();
 
-            // Validate year field
-            if (txtYear.getText().trim().isEmpty()) {
-                ValidationUtil.showError(this, "Please enter the year!");
+            // Get and validate year with ValidationUtil.isValidYear()
+            String yearStr = InputUtil.getTextField(txtYear, "Year");
+            if (!ValidationUtil.isValidYear(yearStr)) {
+                ValidationUtil.showValidationError(this, "Year",
+                    "Tahun harus antara 1900-2100");
                 return;
             }
-            int year = Integer.parseInt(txtYear.getText().trim());
+            int year = InputUtil.getIntField(txtYear, "Year");
 
-            String synopsis = txtSynopsis.getText().trim();
-
-            // Additional validation for manual input
-            if (chkManualInput.isSelected()) {
-                if (director.isEmpty()) {
-                    ValidationUtil.showError(this, "Please enter the director!");
-                    return;
-                }
-                if (synopsis.isEmpty()) {
-                    ValidationUtil.showError(this, "Please enter the synopsis!");
-                    return;
-                }
+            // Get and validate synopsis with length check
+            String synopsis = InputUtil.getTextArea(txtSynopsis, "Synopsis");
+            if (!ValidationUtil.isValidStringLength(synopsis, 10, 2000)) {
+                ValidationUtil.showValidationError(this, "Synopsis",
+                    "Panjang sinopsis harus antara 10-2000 karakter");
+                return;
             }
 
             // Get visibility from radio button
             boolean isVisible = rbVisible.isSelected();
 
-            Film film = new Film(movieId, title, director, genre, year, synopsis, isVisible);
+            // Use stored posterPath from TMDB fetch, or empty string if manual input
+            String posterPath = (currentPosterPath != null) ? currentPosterPath : "";
+
+            Film film = new Film(movieId, title, director, genre, year, synopsis, posterPath, isVisible);
             filmController.addFilm(film);
             refreshTable();
             clearForm();
@@ -350,6 +395,7 @@ public class FilmPanel extends JPanel {
         InputUtil.clearTextArea(txtSynopsis);
         cmbGenre.setSelectedIndex(0);
         rbVisible.setSelected(true); // Default to visible
+        currentPosterPath = null; // Clear poster path
 
         // Reset manual ID if in manual mode
         if (chkManualInput.isSelected()) {
@@ -359,19 +405,39 @@ public class FilmPanel extends JPanel {
 
     /**
      * Menghapus film yang dipilih dari tabel.
-     * Memvalidasi bahwa user sudah memilih film dan menampilkan konfirmasi.
+     * Memvalidasi bahwa user sudah memilih film dan menampilkan konfirmasi dengan detail film.
      * Jika dikonfirmasi, film akan dihapus dari database dan tabel di-refresh.
      */
     private void deleteFilm() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow >= 0) {
-            if (ValidationUtil.confirmAction(this, "Are you sure you want to delete this film?")) {
+            // Get film details for confirmation
+            String filmTitle = (String) tableModel.getValueAt(selectedRow, 1);
+            String filmDirector = (String) tableModel.getValueAt(selectedRow, 2);
+            String filmYear = tableModel.getValueAt(selectedRow, 4).toString();
+
+            String confirmMessage = String.format(
+                "<html><b>Apakah Anda yakin ingin menghapus film ini?</b><br><br>" +
+                "Judul: %s<br>" +
+                "Sutradara: %s<br>" +
+                "Tahun: %s<br><br>" +
+                "<font color='red'>Aksi ini tidak dapat dibatalkan!</font></html>",
+                filmTitle, filmDirector, filmYear
+            );
+
+            int result = JOptionPane.showConfirmDialog(this,
+                confirmMessage,
+                "Konfirmasi Penghapusan Film",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+            if (result == JOptionPane.YES_OPTION) {
                 filmController.deleteFilm(selectedRow);
                 refreshTable();
-                ValidationUtil.showSuccess(this, "Film deleted successfully!");
+                ValidationUtil.showSuccess(this, "Film berhasil dihapus!");
             }
         } else {
-            ValidationUtil.showError(this, "Please select a film to delete!");
+            ValidationUtil.showError(this, "Pilih film yang ingin dihapus terlebih dahulu!");
         }
     }
 }

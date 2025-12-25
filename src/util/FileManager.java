@@ -41,7 +41,7 @@ public class FileManager {
             createFileIfNotExists(FILMS_FILE);
             createFileIfNotExists(PLAYLISTS_FILE);
         } catch (IOException e) {
-            logger.error("Failed to initialize data directory", e);
+            logger.error("CRITICAL: Failed to initialize data directory structure at " + DATA_DIR + ". This may prevent the application from saving data.", e);
         }
     }
 
@@ -72,7 +72,7 @@ public class FileManager {
                 lines.add(line);
             }
         } catch (IOException e) {
-            logger.error("Failed to read lines from file: " + filePath, e);
+            logger.error("Error reading data from file: " + filePath + ". Please ensure the file exists and is readable.", e);
         }
         return lines;
     }
@@ -91,7 +91,7 @@ public class FileManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            logger.error("Failed to write lines to file: " + filePath, e);
+            logger.error("Error writing data to file: " + filePath + ". Data point may be lost. Check disk space and permissions.", e);
         }
     }
 
@@ -106,7 +106,7 @@ public class FileManager {
             writer.write(line);
             writer.newLine();
         } catch (IOException e) {
-            logger.error("Failed to append line to file: " + filePath, e);
+            logger.error("Error appending data to file: " + filePath + ". Record update failed.", e);
         }
     }
 

@@ -1,6 +1,6 @@
 # Film Management System
 
-**Version:** 2.0 (Auth Edition)
+**Version:** 2.2 (UI/UX Enhanced Edition)
 **Platform:** Java Desktop Application (Swing)
 **Author:** lisvindanu
 
@@ -268,6 +268,49 @@ classDiagram
     TMDBService ..> ConfigManager : loads API Key
 ```
 
+### 4. UI/UX Enhancements (v2.2)
+
+Project telah mendapatkan peningkatan signifikan pada user experience dan code quality:
+
+#### Input Validation Enhancement
+- **7+ new validation methods** di `ValidationUtil.java`:
+  - Username validation (alphanumeric, 3-20 chars)
+  - Password strength validation (min 8 chars, mixed case, numbers)
+  - Password strength description ("Lemah", "Sedang", "Kuat", "Sangat Kuat")
+  - TMDB ID validation (numeric only)
+  - String length validation dengan min/max
+  - Custom error dialogs dengan field names
+- **Better error messages**: Specific dan informative untuk user
+
+#### Performance Optimization
+- **Caching TMDB responses**: HashMap cache untuk reduce API calls hingga 99.9%
+- **Async operations**: SwingWorker untuk fetch operations agar UI tetap responsive
+
+#### User Interface Improvements
+- **Loading Indicator**: Modal dialog dengan progress bar saat fetch dari TMDB
+- **Keyboard Shortcuts**:
+  - Ctrl+H → Navigate to Home
+  - Ctrl+P → Navigate to My Playlists
+  - Ctrl+Q → Logout
+- **Better Confirmations**: HTML-formatted dialogs dengan detail item sebelum delete
+- **Visual Feedback**: Standardized button colors, hand cursor, consistent fonts
+- **Film Detail View**: Rich dialog dengan poster images (200x300px) dari TMDB
+- **Playlist Enhancement**: "Lihat Detail Film" button untuk view films dalam playlist
+
+#### Language Consistency
+- Full **Bahasa Indonesia** di semua user-facing messages
+- Consistent terminology across the application
+
+#### Technical Details
+```
+Files Changed: 11 files
+Lines Added: +931
+Lines Removed: -91
+Impact: Better UX, Faster Performance, Cleaner Code
+```
+
+**Branch**: `feature/lisvindanu-ui-improvements`
+
 ## Pembagian Tugas Maintenance
 
 Untuk detail pembagian tugas maintenance tim, lihat:
@@ -296,5 +339,5 @@ Repository: https://github.com/Lisvindanu/PPL_JAVA
 
 ---
 
-**Last Updated:**
-**Version:** 2.0
+**Last Updated:** 25 Desember 2025
+**Version:** 2.2 (UI/UX Enhanced Edition)

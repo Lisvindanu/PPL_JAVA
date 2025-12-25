@@ -4,23 +4,28 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Service untuk mengambil data film dari The Movie Database (TMDB) API.
- * Menangani HTTP request ke TMDB API dan parsing response JSON.
+ * Menangani HTTP request ke TMDB API dan parsing response JSON dengan caching support.
  * Menyediakan method untuk fetch movie details dan credits berdasarkan movie ID.
  *
  * @author lisvindanu
- * @version 2.0
+ * @version 3.0
  */
 public class TMDBService {
     // TMDB API Key - https://www.themoviedb.org/settings/api
     private static final String API_KEY = ConfigManager.getProperty("tmdb.api.key");
     private static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
 
+    // Cache untuk menyimpan movie data yang sudah pernah di-fetch
+    private static final Map<String, MovieData> movieCache = new HashMap<>();
+
     /**
      * Inner class untuk menyimpan data film yang diambil dari TMDB.
-     * Berisi informasi dasar film seperti title, director, genre, year, dan synopsis.
+     * Berisi informasi dasar film seperti title, director, genre, year, synopsis, dan poster path.
      */
     public static class MovieData {
         public String title;
@@ -28,6 +33,7 @@ public class TMDBService {
         public String genre;
         public int year;
         public String synopsis;
+        public String posterPath;
 
         /**
          * Konstruktor untuk membuat objek MovieData.
@@ -37,13 +43,15 @@ public class TMDBService {
          * @param genre genre film
          * @param year tahun rilis
          * @param synopsis sinopsis film
+         * @param posterPath path poster film dari TMDB
          */
-        public MovieData(String title, String director, String genre, int year, String synopsis) {
+        public MovieData(String title, String director, String genre, int year, String synopsis, String posterPath) {
             this.title = title;
             this.director = director;
             this.genre = genre;
             this.year = year;
             this.synopsis = synopsis;
+            this.posterPath = posterPath;
         }
     }
 
@@ -58,7 +66,8 @@ public class TMDBService {
     private static final com.google.gson.Gson gson = new com.google.gson.Gson();
 
     /**
-     * Mengambil data film dari TMDB API berdasarkan movie ID.
+     * Mengambil data film dari TMDB API berdasarkan movie ID dengan caching support.
+     * Cek cache terlebih dahulu, jika tidak ada baru melakukan API call.
      * Melakukan dua API call: movie details dan credits.
      *
      * @param movieId ID film di TMDB
@@ -66,6 +75,11 @@ public class TMDBService {
      * @throws Exception jika terjadi error saat API call atau parsing
      */
     public static MovieData fetchMovieData(String movieId) throws Exception {
+        // Check cache first
+        if (movieCache.containsKey(movieId)) {
+            return movieCache.get(movieId);
+        }
+
         // Fetch movie details
         String movieUrl = BASE_URL + movieId + "?api_key=" + API_KEY;
         String movieResponseJson = getStringFromURL(movieUrl);
@@ -75,6 +89,7 @@ public class TMDBService {
         String synopsis = movieResp.getOverview();
         String releaseDate = movieResp.getReleaseDate();
         int year = (releaseDate == null || releaseDate.isEmpty()) ? 2024 : Integer.parseInt(releaseDate.split("-")[0]);
+        String posterPath = movieResp.getPosterPath(); // Get poster path
 
         // Get first genre
         String genre = "Unknown";
@@ -97,7 +112,12 @@ public class TMDBService {
             }
         }
 
-        return new MovieData(title, director, genre, year, synopsis);
+        MovieData movieData = new MovieData(title, director, genre, year, synopsis, posterPath);
+
+        // Store to cache
+        movieCache.put(movieId, movieData);
+
+        return movieData;
     }
 
     /**

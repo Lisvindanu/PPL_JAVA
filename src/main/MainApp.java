@@ -7,6 +7,7 @@ import util.AuthService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 /**
  * Kelas aplikasi utama untuk Sistem Manajemen Film.
@@ -14,7 +15,7 @@ import java.awt.*;
  * Mengelola navigasi antar panel berdasarkan autentikasi dan role pengguna (Admin/User).
  *
  * @author lisvindanu
- * @version 2.0
+ * @version 3.0
  */
 public class MainApp extends JFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MainApp.class);
@@ -122,7 +123,7 @@ public class MainApp extends JFrame {
 
     /**
      * Membuat menu bar untuk pengguna Admin.
-     * Berisi menu File (Logout) dan Help (About).
+     * Berisi menu File (Logout) dan Help (About) dengan keyboard shortcuts.
      */
     private void createAdminMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -130,6 +131,7 @@ public class MainApp extends JFrame {
         // File Menu
         JMenu fileMenu = new JMenu("File");
         JMenuItem logoutItem = new JMenuItem("Logout");
+        logoutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK));
         logoutItem.addActionListener(e -> logout());
         fileMenu.add(logoutItem);
 
@@ -147,7 +149,7 @@ public class MainApp extends JFrame {
 
     /**
      * Membuat menu bar untuk pengguna User.
-     * Berisi menu File (Home, My Playlists, Logout) dan Help (About).
+     * Berisi menu File (Home, My Playlists, Logout) dan Help (About) dengan keyboard shortcuts.
      */
     private void createUserMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -156,15 +158,18 @@ public class MainApp extends JFrame {
         JMenu fileMenu = new JMenu("File");
 
         JMenuItem homeItem = new JMenuItem("Home");
+        homeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.CTRL_DOWN_MASK));
         homeItem.addActionListener(e -> {
             homePanel.refreshData();
             cardLayout.show(contentPanel, "home");
         });
 
         JMenuItem myPlaylistsItem = new JMenuItem("My Playlists");
+        myPlaylistsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK));
         myPlaylistsItem.addActionListener(e -> cardLayout.show(contentPanel, "myplaylists"));
 
         JMenuItem logoutItem = new JMenuItem("Logout");
+        logoutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK));
         logoutItem.addActionListener(e -> logout());
 
         fileMenu.add(homeItem);
@@ -186,15 +191,10 @@ public class MainApp extends JFrame {
 
     /**
      * Menangani proses logout pengguna.
-     * Menampilkan konfirmasi, membersihkan session, dan kembali ke panel login.
+     * Menampilkan konfirmasi menggunakan ValidationUtil, membersihkan session, dan kembali ke panel login.
      */
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to logout?",
-                "Logout Confirmation",
-                JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (util.ValidationUtil.confirmAction(this, "Apakah Anda yakin ingin logout?")) {
             AuthService.logout();
 
             // Clear everything and show login again

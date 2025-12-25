@@ -15,6 +15,7 @@ public class Film {
     private String genre;
     private int year;
     private String synopsis;
+    private String posterPath; // TMDB poster path
     private boolean isVisible;
 
     /**
@@ -26,14 +27,16 @@ public class Film {
      * @param genre genre film
      * @param year tahun rilis
      * @param synopsis sinopsis film
+     * @param posterPath path poster film dari TMDB
      */
-    public Film(String id, String title, String director, String genre, int year, String synopsis) {
+    public Film(String id, String title, String director, String genre, int year, String synopsis, String posterPath) {
         this.id = id;
         this.title = title;
         this.director = director;
         this.genre = genre;
         this.year = year;
         this.synopsis = synopsis;
+        this.posterPath = posterPath;
         this.isVisible = true; // Default visible
     }
 
@@ -46,15 +49,17 @@ public class Film {
      * @param genre genre film
      * @param year tahun rilis
      * @param synopsis sinopsis film
+     * @param posterPath path poster film dari TMDB
      * @param isVisible status visibility untuk user biasa
      */
-    public Film(String id, String title, String director, String genre, int year, String synopsis, boolean isVisible) {
+    public Film(String id, String title, String director, String genre, int year, String synopsis, String posterPath, boolean isVisible) {
         this.id = id;
         this.title = title;
         this.director = director;
         this.genre = genre;
         this.year = year;
         this.synopsis = synopsis;
+        this.posterPath = posterPath;
         this.isVisible = isVisible;
     }
 
@@ -143,6 +148,20 @@ public class Film {
     public void setSynopsis(String synopsis) { this.synopsis = synopsis; }
 
     /**
+     * Mendapatkan path poster film.
+     *
+     * @return path poster film dari TMDB
+     */
+    public String getPosterPath() { return posterPath; }
+
+    /**
+     * Mengatur path poster film.
+     *
+     * @param posterPath path poster baru
+     */
+    public void setPosterPath(String posterPath) { this.posterPath = posterPath; }
+
+    /**
      * Mengecek apakah film visible untuk user biasa.
      *
      * @return true jika visible, false jika hidden
@@ -158,19 +177,20 @@ public class Film {
 
     /**
      * Mengkonversi data Film ke format string untuk disimpan di file.
-     * Format: id|title|director|genre|year|synopsis|isVisible
+     * Format: id|title|director|genre|year|synopsis|posterPath|isVisible
      * Karakter pipe (|) dalam synopsis diganti dengan tilde (~).
      *
      * @return representasi string dari Film
      */
     public String toFileLine() {
+        String safePosterPath = (posterPath != null) ? posterPath : "";
         return String.join("|", id, title, director, genre, String.valueOf(year),
-                          synopsis.replace("|", "~"), String.valueOf(isVisible));
+                          synopsis.replace("|", "~"), safePosterPath, String.valueOf(isVisible));
     }
 
     /**
      * Membuat objek Film dari string yang dibaca dari file.
-     * Format: id|title|director|genre|year|synopsis|isVisible
+     * Format: id|title|director|genre|year|synopsis|posterPath|isVisible
      * Karakter tilde (~) dalam synopsis dikembalikan ke pipe (|).
      *
      * @param line string yang berisi data film
@@ -185,8 +205,9 @@ public class Film {
             String genre = parts[3];
             int year = Integer.parseInt(parts[4]);
             String synopsis = parts[5].replace("~", "|");
-            boolean isVisible = parts.length >= 7 ? Boolean.parseBoolean(parts[6]) : true;
-            return new Film(id, title, director, genre, year, synopsis, isVisible);
+            String posterPath = parts.length >= 7 ? parts[6] : "";
+            boolean isVisible = parts.length >= 8 ? Boolean.parseBoolean(parts[7]) : true;
+            return new Film(id, title, director, genre, year, synopsis, posterPath, isVisible);
         }
         return null;
     }

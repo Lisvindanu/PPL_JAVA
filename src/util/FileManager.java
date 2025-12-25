@@ -39,7 +39,7 @@ public class FileManager {
             createFileIfNotExists(FILMS_FILE);
             createFileIfNotExists(PLAYLISTS_FILE);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error initializing data directory: " + e.getMessage());
         }
     }
 
@@ -70,7 +70,7 @@ public class FileManager {
                 lines.add(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error reading file " + filePath + ": " + e.getMessage());
         }
         return lines;
     }
@@ -89,7 +89,7 @@ public class FileManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error writing to file " + filePath + ": " + e.getMessage());
         }
     }
 
@@ -104,7 +104,7 @@ public class FileManager {
             writer.write(line);
             writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error appending to file " + filePath + ": " + e.getMessage());
         }
     }
 

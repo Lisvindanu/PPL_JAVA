@@ -14,8 +14,8 @@ import java.net.URL;
  * @version 2.0
  */
 public class TMDBService {
-    // TMDB API Key - https://www.themoviedb.org/settings/api
-    private static final String API_KEY = "d7ed871909143e10f0ee697bce4344bf";
+    // TMDB API Key - loaded from config.properties
+    private static final String API_KEY = ConfigManager.get("tmdb.api.key");
     private static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
 
     /**
@@ -56,6 +56,10 @@ public class TMDBService {
      * @throws Exception jika terjadi error saat API call atau parsing
      */
     public static MovieData fetchMovieData(String movieId) throws Exception {
+        if (API_KEY == null || API_KEY.isEmpty()) {
+            throw new RuntimeException("TMDB API Key not found in config.properties");
+        }
+
         // Fetch movie details
         String movieUrl = BASE_URL + movieId + "?api_key=" + API_KEY;
         String movieResponse = getStringFromURL(movieUrl);
@@ -155,19 +159,23 @@ public class TMDBService {
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Accept", "application/json");
 
-        if (conn.getResponseCode() != 200) {
-            throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
-        }
+        try {
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
+            }
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            response.append(line);
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+                return response.toString();
+            }
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-        br.close();
-        conn.disconnect();
-
-        return response.toString();
     }
 }

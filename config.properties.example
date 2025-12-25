@@ -1,13 +1,1 @@
-# Film Management System Configuration
-# Copy this file to config.properties and fill in your values
-
-# TMDB API Configuration
-# Get your API key from: https://www.themoviedb.org/settings/api
-tmdb.api.key=YOUR_TMDB_API_KEY_HERE
-
-# Data Directory Configuration
-data.directory=src/data/
-
-# Application Settings
-app.name=Film Management System
-app.version=2.0
+tmdb.api.key=YOUR_API_KEY_HERE

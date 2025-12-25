@@ -15,7 +15,7 @@ import java.net.URL;
  */
 public class TMDBService {
     // TMDB API Key - https://www.themoviedb.org/settings/api
-    private static final String API_KEY = "d7ed871909143e10f0ee697bce4344bf";
+    private static final String API_KEY = ConfigManager.getProperty("tmdb.api.key");
     private static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
 
     /**
@@ -55,91 +55,49 @@ public class TMDBService {
      * @return objek MovieData berisi informasi film
      * @throws Exception jika terjadi error saat API call atau parsing
      */
+    private static final com.google.gson.Gson gson = new com.google.gson.Gson();
+
+    /**
+     * Mengambil data film dari TMDB API berdasarkan movie ID.
+     * Melakukan dua API call: movie details dan credits.
+     *
+     * @param movieId ID film di TMDB
+     * @return objek MovieData berisi informasi film
+     * @throws Exception jika terjadi error saat API call atau parsing
+     */
     public static MovieData fetchMovieData(String movieId) throws Exception {
         // Fetch movie details
         String movieUrl = BASE_URL + movieId + "?api_key=" + API_KEY;
-        String movieResponse = getStringFromURL(movieUrl);
+        String movieResponseJson = getStringFromURL(movieUrl);
+        TMDBMovieResponse movieResp = gson.fromJson(movieResponseJson, TMDBMovieResponse.class);
 
-        String title = extractValue(movieResponse, "\"title\":");
-        String synopsis = extractValue(movieResponse, "\"overview\":");
-        String releaseDate = extractValue(movieResponse, "\"release_date\":");
-        int year = releaseDate.isEmpty() ? 2024 : Integer.parseInt(releaseDate.split("-")[0]);
+        String title = movieResp.getTitle();
+        String synopsis = movieResp.getOverview();
+        String releaseDate = movieResp.getReleaseDate();
+        int year = (releaseDate == null || releaseDate.isEmpty()) ? 2024 : Integer.parseInt(releaseDate.split("-")[0]);
 
         // Get first genre
-        String genre = extractFirstGenre(movieResponse);
+        String genre = "Unknown";
+        if (movieResp.getGenres() != null && !movieResp.getGenres().isEmpty()) {
+            genre = movieResp.getGenres().get(0).getName();
+        }
 
         // Fetch credits for director
         String creditsUrl = BASE_URL + movieId + "/credits?api_key=" + API_KEY;
-        String creditsResponse = getStringFromURL(creditsUrl);
-        String director = extractDirector(creditsResponse);
+        String creditsResponseJson = getStringFromURL(creditsUrl);
+        TMDBCreditsResponse creditsResp = gson.fromJson(creditsResponseJson, TMDBCreditsResponse.class);
 
-        return new MovieData(title, director, genre, year, synopsis);
-    }
-
-    /**
-     * Mengekstrak nilai dari JSON response berdasarkan key.
-     * Menggunakan simple string parsing (bukan JSON parser library).
-     *
-     * @param json string JSON response
-     * @param key key yang dicari (contoh: "title":)
-     * @return nilai dari key tersebut, atau empty string jika tidak ditemukan
-     */
-    private static String extractValue(String json, String key) {
-        int startIndex = json.indexOf(key);
-        if (startIndex == -1) return "";
-
-        startIndex = json.indexOf("\"", startIndex + key.length()) + 1;
-        int endIndex = json.indexOf("\"", startIndex);
-
-        if (startIndex == -1 || endIndex == -1) return "";
-        return json.substring(startIndex, endIndex);
-    }
-
-    /**
-     * Mengekstrak genre pertama dari array genres dalam JSON response.
-     *
-     * @param json string JSON response
-     * @return nama genre pertama, atau "Unknown" jika tidak ada
-     */
-    private static String extractFirstGenre(String json) {
-        int genresIndex = json.indexOf("\"genres\":");
-        if (genresIndex == -1) return "Unknown";
-
-        int nameIndex = json.indexOf("\"name\":", genresIndex);
-        if (nameIndex == -1) return "Unknown";
-
-        int startQuote = json.indexOf("\"", nameIndex + 7) + 1;
-        int endQuote = json.indexOf("\"", startQuote);
-
-        if (startQuote == -1 || endQuote == -1) return "Unknown";
-        return json.substring(startQuote, endQuote);
-    }
-
-    /**
-     * Mengekstrak nama director dari credits JSON response.
-     * Mencari crew member dengan job "Director".
-     *
-     * @param json string JSON credits response
-     * @return nama director, atau "Unknown" jika tidak ditemukan
-     */
-    private static String extractDirector(String json) {
-        String crew = json.substring(json.indexOf("\"crew\":"));
-
-        int jobIndex = crew.indexOf("\"job\":\"Director\"");
-        if (jobIndex == -1) return "Unknown";
-
-        String beforeJob = crew.substring(0, jobIndex);
-        int lastNameIndex = beforeJob.lastIndexOf("\"name\":\"");
-        if (lastNameIndex == -1) return "Unknown";
-
-        int startQuote = lastNameIndex + 8;
-        int endQuote = beforeJob.indexOf("\"", startQuote);
-
-        if (endQuote == -1) {
-            endQuote = crew.indexOf("\"", jobIndex - (beforeJob.length() - startQuote));
+        String director = "Unknown";
+        if (creditsResp.getCrew() != null) {
+            for (TMDBCreditsResponse.Crew crewMember : creditsResp.getCrew()) {
+                if ("Director".equals(crewMember.getJob())) {
+                    director = crewMember.getName();
+                    break;
+                }
+            }
         }
 
-        return beforeJob.substring(startQuote, endQuote);
+        return new MovieData(title, director, genre, year, synopsis);
     }
 
     /**

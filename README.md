@@ -11,23 +11,27 @@ Film Management System adalah aplikasi desktop berbasis Java yang memungkinkan p
 ### Fitur Utama
 
 - **User Authentication**
+
   - Login & Register system
   - Role-based access control (Admin/User)
   - Session management
 
 - **Film Management** (Admin)
+
   - Tambah film dengan TMDB ID
   - Edit dan hapus film
   - Soft delete (visibility control)
   - View semua film dalam sistem
 
 - **Playlist Management** (User)
+
   - Buat playlist pribadi
   - Tambah/hapus film ke playlist
   - Kelola multiple playlists
   - View film dalam playlist
 
 - **TMDB Integration**
+
   - Auto-fetch movie details dari TMDB API
   - Informasi lengkap: title, director, genre, year, synopsis
 
@@ -85,11 +89,13 @@ Latihan/
 Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 
 ### Model Layer
+
 - `User.java` - Representasi data user dengan role-based access
 - `Film.java` - Representasi data film dengan metadata lengkap
 - `Playlist.java` - Representasi playlist dengan daftar film
 
 ### View Layer (Swing GUI)
+
 - `LoginPanel` - UI untuk login & register
 - `AdminPanel` - UI untuk admin (manage films & users)
 - `HomePanel` - UI untuk user melihat daftar film
@@ -97,11 +103,13 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 - `FilmPanel` - UI untuk detail film
 
 ### Controller Layer
+
 - `UserController` - Business logic untuk user management
 - `FilmController` - Business logic untuk film management
 - `PlaylistController` - Business logic untuk playlist management
 
 ### Utility Layer
+
 - `AuthService` - Handle authentication & authorization
 - `FileManager` - Handle file I/O operations
 - `ValidationUtil` - Input validation & dialog helpers
@@ -118,6 +126,7 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 ## Cara Menjalankan Aplikasi
 
 ### Prerequisites
+
 - Java Development Kit (JDK) 8 atau lebih tinggi
 - IntelliJ IDEA (optional, bisa juga command line)
 - Internet connection (untuk fetch data dari TMDB)
@@ -125,24 +134,31 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 ### Setup & Run
 
 1. **Clone repository**
+
    ```bash
    git clone https://github.com/Lisvindanu/PPL_JAVA.git
    cd PPL_JAVA
    ```
 
 2. **Buka di IntelliJ IDEA**
+
    - File → Open → pilih folder project
    - Wait sampai project indexed
 
 3. **Run aplikasi**
+
    - Buka `src/main/MainApp.java`
    - Klik kanan → Run 'MainApp.main()'
 
-   Atau via terminal:
+   Atau via terminal (Windows):
+
    ```bash
-   javac src/main/MainApp.java
-   java -cp src main.MainApp
+   dir /s /b src\*.java > sources.txt
+   javac -cp "lib\*;." -d out @sources.txt
+   java -cp "lib\*;out;src" main.MainApp
    ```
+
+   _Note: Pastikan folder `lib` berisi library Gson, SLF4J, dan Logback._
 
 4. **Login**
    - Default admin: (buat di register dengan role ADMIN)
@@ -151,6 +167,7 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 ## User Guide
 
 ### Sebagai User:
+
 1. **Register** - Buat akun baru dengan email & password
 2. **Login** - Login dengan credentials
 3. **Browse Films** - Lihat daftar film di Home panel
@@ -158,6 +175,7 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 5. **Add Films** - Tambahkan film ke playlist
 
 ### Sebagai Admin:
+
 1. **Login** dengan akun admin
 2. **Manage Films** - Tambah/edit/hapus film
 3. **Add Film via TMDB** - Input TMDB movie ID untuk auto-fetch
@@ -166,16 +184,19 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 ## Data Format
 
 ### users.txt
+
 ```
 email|password|username|role|gender|isPremium
 ```
 
 ### films.txt
+
 ```
 id|title|director|genre|year|synopsis|isVisible
 ```
 
 ### playlists.txt
+
 ```
 playlistName|userEmail|filmId1,filmId2,filmId3
 ```
@@ -185,10 +206,12 @@ playlistName|userEmail|filmId1,filmId2,filmId3
 Aplikasi menggunakan **The Movie Database (TMDB) API** untuk mengambil data film.
 
 ### Endpoints yang digunakan:
+
 - `/movie/{movie_id}` - Get movie details
 - `/movie/{movie_id}/credits` - Get movie credits (director)
 
 ### Cara mendapatkan TMDB ID:
+
 1. Buka https://www.themoviedb.org/
 2. Cari film yang diinginkan
 3. Copy ID dari URL (contoh: `550` untuk Fight Club)
@@ -200,10 +223,50 @@ Buka `javadocs/index.html` di browser untuk melihat dokumentasi API.
 
 ## Known Issues
 
-- API key masih hardcoded di `TMDBService.java` (security issue)
-- Parsing JSON masih manual (tidak menggunakan library)
 - Error handling bisa ditingkatkan
 - Belum ada unit tests
+
+## Modernization Updates (v2.1)
+
+Project ini telah dimodernisasi (per Dec 2025) untuk meningkatkan maintainability dan standardisasi kode.
+
+### 1. Library Management
+
+Project kini menggunakan library eksternal yang dikelola di folder `lib/`:
+
+- **Gson (2.10.1)**: Untuk parsing JSON response dari TMDB API.
+- **SLF4J + Logback**: Untuk standard logging menggantikan `System.out.println`.
+
+### 2. Architecture Updates
+
+- **JSON Parsing**: Manual string parsing di `TMDBService` telah diganti dengan automapping ke POJO (`TMDBMovieResponse`, `TMDBCreditsResponse`) menggunakan Gson.
+- **Logging**: Implementasi logging terpusat dengan `logback.xml` konfigurasi (Console + File output).
+- **Configuration**: API Key dan path data kini dieksternalisasi ke `config.properties`.
+
+### 3. Class Diagram (TMDB Integration)
+
+```mermaid
+classDiagram
+    class TMDBService {
+        +fetchMovieData(id) MovieData
+    }
+    class TMDBMovieResponse {
+        -String title
+        -String overview
+        -String release_date
+        -List~Genre~ genres
+    }
+    class TMDBCreditsResponse {
+        -List~Crew~ crew
+    }
+    class ConfigManager {
+        +getProperty(key) String
+    }
+
+    TMDBService ..> TMDBMovieResponse : uses Gson
+    TMDBService ..> TMDBCreditsResponse : uses Gson
+    TMDBService ..> ConfigManager : loads API Key
+```
 
 ## Pembagian Tugas Maintenance
 
@@ -217,6 +280,7 @@ Planning untuk maintenance v3.0 sudah dibuat oleh tim.
 ## Contributing
 
 Anggota Tim Development:
+
 - Rafli Ramdhani (223040010)
 - Bhadrika Aryaputra Hermawan (223040018)
 - Lisvindanu (223040038)
@@ -232,5 +296,5 @@ Repository: https://github.com/Lisvindanu/PPL_JAVA
 
 ---
 
-**Last Updated:** 
+**Last Updated:**
 **Version:** 2.0

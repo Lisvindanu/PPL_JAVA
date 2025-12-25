@@ -17,6 +17,7 @@ import java.awt.*;
  * @version 2.0
  */
 public class MainApp extends JFrame {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MainApp.class);
     private JPanel contentPanel;
     private CardLayout cardLayout;
 
@@ -242,7 +243,7 @@ public class MainApp extends JFrame {
             // Set system look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to initialize application look and feel", e);
         }
 
         SwingUtilities.invokeLater(() -> {

@@ -5,6 +5,9 @@ import util.FileManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Controller untuk mengelola operasi CRUD data User.
  * Menangani pembacaan dan penulisan data user ke file storage.
@@ -14,6 +17,7 @@ import java.util.List;
  * @version 2.0
  */
 public class UserController {
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     /**
      * Konstruktor UserController.
@@ -59,9 +63,11 @@ public class UserController {
      * @param user objek User yang akan ditambahkan
      */
     public void addUser(User user) {
+        logger.info("Adding new user: {}", user.getEmail());
         List<User> users = loadUsers();
         users.add(user);
         saveUsers(users);
+        logger.info("User added successfully: {}", user.getEmail());
     }
 
     /**
@@ -71,10 +77,14 @@ public class UserController {
      * @param user objek User dengan data baru
      */
     public void updateUser(int index, User user) {
+        logger.info("Updating user at index: {}", index);
         List<User> users = loadUsers();
         if (index >= 0 && index < users.size()) {
             users.set(index, user);
             saveUsers(users);
+            logger.info("User updated successfully: {}", user.getEmail());
+        } else {
+            logger.warn("Failed to update user. Invalid index: {}", index);
         }
     }
 
@@ -84,10 +94,14 @@ public class UserController {
      * @param index posisi user yang akan dihapus (0-based)
      */
     public void deleteUser(int index) {
+        logger.info("Deleting user at index: {}", index);
         List<User> users = loadUsers();
         if (index >= 0 && index < users.size()) {
-            users.remove(index);
+            User removedUser = users.remove(index);
             saveUsers(users);
+            logger.info("User deleted successfully: {}", removedUser.getEmail());
+        } else {
+            logger.warn("Failed to delete user. Invalid index: {}", index);
         }
     }
 

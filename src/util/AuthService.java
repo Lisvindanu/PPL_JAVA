@@ -3,6 +3,8 @@ package util;
 import model.User;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service untuk mengelola autentikasi dan autorisasi pengguna.
@@ -13,6 +15,7 @@ import java.util.List;
  * @version 2.0
  */
 public class AuthService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
     private static User currentUser = null;
     private static final String DEFAULT_ADMIN_EMAIL = "anaphygon@protonmail.com";
     private static final String DEFAULT_ADMIN_PASSWORD = "password";
@@ -44,6 +47,7 @@ public class AuthService {
      * @return objek User jika login berhasil, null jika gagal
      */
     public static User login(String email, String password) {
+        logger.info("Attempting login for email: {}", email);
         List<String> users = FileManager.readLines(FileManager.USERS_FILE);
 
         for (String line : users) {
@@ -55,6 +59,8 @@ public class AuthService {
         }
         return null;
     }
+    
+    /**
 
     /**
      * Mendaftarkan pengguna baru ke dalam sistem.
@@ -66,10 +72,12 @@ public class AuthService {
      * @return true jika registrasi berhasil, false jika email sudah ada
      */
     public static boolean register(String email, String password, String username) {
+        logger.info("Attempting registration for email: {}", email);
         // Check if email already exists
         List<String> users = FileManager.readLines(FileManager.USERS_FILE);
         for (String line : users) {
             if (line.startsWith(email + "|")) {
+                logger.warn("Registration failed. Email already exists: {}", email);
                 return false; // Email already exists
             }
         }
@@ -77,6 +85,7 @@ public class AuthService {
         // Create new user with USER role
         User newUser = new User(email, password, username, "USER");
         FileManager.appendLine(FileManager.USERS_FILE, newUser.toFileLine());
+        logger.info("Registration successful for user: {}", email);
         return true;
     }
 
@@ -85,6 +94,9 @@ public class AuthService {
      * Menghapus current user dari session.
      */
     public static void logout() {
+        if (currentUser != null) {
+            logger.info("User logged out: {}", currentUser.getEmail());
+        }
         currentUser = null;
     }
 

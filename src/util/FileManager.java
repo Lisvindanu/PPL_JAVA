@@ -13,7 +13,9 @@ import java.util.*;
  * @version 2.0
  */
 public class FileManager {
-    private static final String DATA_DIR = "src/data/";
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileManager.class);
+
+    private static final String DATA_DIR = ConfigManager.getProperty("data.directory", "src/data/");
     public static final String USERS_FILE = DATA_DIR + "users.txt";
     public static final String FILMS_FILE = DATA_DIR + "films.txt";
     public static final String PLAYLISTS_FILE = DATA_DIR + "playlists.txt";
@@ -39,7 +41,7 @@ public class FileManager {
             createFileIfNotExists(FILMS_FILE);
             createFileIfNotExists(PLAYLISTS_FILE);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("CRITICAL: Failed to initialize data directory structure at " + DATA_DIR + ". This may prevent the application from saving data.", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class FileManager {
                 lines.add(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error reading data from file: " + filePath + ". Please ensure the file exists and is readable.", e);
         }
         return lines;
     }
@@ -89,7 +91,7 @@ public class FileManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error writing data to file: " + filePath + ". Data point may be lost. Check disk space and permissions.", e);
         }
     }
 
@@ -104,7 +106,7 @@ public class FileManager {
             writer.write(line);
             writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error appending data to file: " + filePath + ". Record update failed.", e);
         }
     }
 

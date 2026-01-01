@@ -2,4 +2,4 @@ anaphygon@protonmail.com|password|Admin|ADMIN|N/A|false
 Lisvindanu015@gmail.com|Lisvindanu|Lisvindanu|USER|N/A|true
 lisvindanu015@gmail.com|lisvindanu|lisvindanu|USER|N/A|true
 rifki@gmail.com|12345678|rifki|USER|N/A|true
-danuganteng@gmail.com|lisvindanu|danu|USER|N/A|false
+danuganteng@gmail.com|lisvindanu|danu|USER|N/A|true

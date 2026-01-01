@@ -4,23 +4,28 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Service untuk mengambil data film dari The Movie Database (TMDB) API.
- * Menangani HTTP request ke TMDB API dan parsing response JSON.
+ * Menangani HTTP request ke TMDB API dan parsing response JSON dengan caching support.
  * Menyediakan method untuk fetch movie details dan credits berdasarkan movie ID.
  *
  * @author lisvindanu
- * @version 2.0
+ * @version 3.0
  */
 public class TMDBService {
     // TMDB API Key - https://www.themoviedb.org/settings/api
-    private static final String API_KEY = "d7ed871909143e10f0ee697bce4344bf";
+    private static final String API_KEY = ConfigManager.getProperty("tmdb.api.key");
     private static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
+
+    // Cache untuk menyimpan movie data yang sudah pernah di-fetch
+    private static final Map<String, MovieData> movieCache = new HashMap<>();
 
     /**
      * Inner class untuk menyimpan data film yang diambil dari TMDB.
-     * Berisi informasi dasar film seperti title, director, genre, year, dan synopsis.
+     * Berisi informasi dasar film seperti title, director, genre, year, synopsis, dan poster path.
      */
     public static class MovieData {
         public String title;
@@ -28,6 +33,7 @@ public class TMDBService {
         public String genre;
         public int year;
         public String synopsis;
+        public String posterPath;
 
         /**
          * Konstruktor untuk membuat objek MovieData.
@@ -37,13 +43,15 @@ public class TMDBService {
          * @param genre genre film
          * @param year tahun rilis
          * @param synopsis sinopsis film
+         * @param posterPath path poster film dari TMDB
          */
-        public MovieData(String title, String director, String genre, int year, String synopsis) {
+        public MovieData(String title, String director, String genre, int year, String synopsis, String posterPath) {
             this.title = title;
             this.director = director;
             this.genre = genre;
             this.year = year;
             this.synopsis = synopsis;
+            this.posterPath = posterPath;
         }
     }
 
@@ -55,91 +63,61 @@ public class TMDBService {
      * @return objek MovieData berisi informasi film
      * @throws Exception jika terjadi error saat API call atau parsing
      */
-    public static MovieData fetchMovieData(String movieId) throws Exception {
+    private static final com.google.gson.Gson gson = new com.google.gson.Gson();
+
+    /**
+     * Mengambil data film dari TMDB API berdasarkan movie ID dengan caching support.
+     * Cek cache terlebih dahulu, jika tidak ada baru melakukan API call.
+     * Melakukan dua API call: movie details dan credits.
+     *
+     * @param movieId ID film di TMDB
+     * @return objek MovieData berisi informasi film
+     * @throws Exception jika terjadi error saat API call atau parsing
+     */
+    public static MovieData fetchMovieData(String movieId) {
+        // Check cache first
+        if (movieCache.containsKey(movieId)) {
+            return movieCache.get(movieId);
+        }
+
         // Fetch movie details
         String movieUrl = BASE_URL + movieId + "?api_key=" + API_KEY;
-        String movieResponse = getStringFromURL(movieUrl);
+        String movieResponseJson = getStringFromURL(movieUrl);
+        TMDBMovieResponse movieResp = gson.fromJson(movieResponseJson, TMDBMovieResponse.class);
 
-        String title = extractValue(movieResponse, "\"title\":");
-        String synopsis = extractValue(movieResponse, "\"overview\":");
-        String releaseDate = extractValue(movieResponse, "\"release_date\":");
-        int year = releaseDate.isEmpty() ? 2024 : Integer.parseInt(releaseDate.split("-")[0]);
+        String title = movieResp.getTitle();
+        String synopsis = movieResp.getOverview();
+        String releaseDate = movieResp.getReleaseDate();
+        int year = (releaseDate == null || releaseDate.isEmpty()) ? 2024 : Integer.parseInt(releaseDate.split("-")[0]);
+        String posterPath = movieResp.getPosterPath(); // Get poster path
 
         // Get first genre
-        String genre = extractFirstGenre(movieResponse);
+        String genre = "Unknown";
+        if (movieResp.getGenres() != null && !movieResp.getGenres().isEmpty()) {
+            genre = movieResp.getGenres().get(0).getName();
+        }
 
         // Fetch credits for director
         String creditsUrl = BASE_URL + movieId + "/credits?api_key=" + API_KEY;
-        String creditsResponse = getStringFromURL(creditsUrl);
-        String director = extractDirector(creditsResponse);
+        String creditsResponseJson = getStringFromURL(creditsUrl);
+        TMDBCreditsResponse creditsResp = gson.fromJson(creditsResponseJson, TMDBCreditsResponse.class);
 
-        return new MovieData(title, director, genre, year, synopsis);
-    }
-
-    /**
-     * Mengekstrak nilai dari JSON response berdasarkan key.
-     * Menggunakan simple string parsing (bukan JSON parser library).
-     *
-     * @param json string JSON response
-     * @param key key yang dicari (contoh: "title":)
-     * @return nilai dari key tersebut, atau empty string jika tidak ditemukan
-     */
-    private static String extractValue(String json, String key) {
-        int startIndex = json.indexOf(key);
-        if (startIndex == -1) return "";
-
-        startIndex = json.indexOf("\"", startIndex + key.length()) + 1;
-        int endIndex = json.indexOf("\"", startIndex);
-
-        if (startIndex == -1 || endIndex == -1) return "";
-        return json.substring(startIndex, endIndex);
-    }
-
-    /**
-     * Mengekstrak genre pertama dari array genres dalam JSON response.
-     *
-     * @param json string JSON response
-     * @return nama genre pertama, atau "Unknown" jika tidak ada
-     */
-    private static String extractFirstGenre(String json) {
-        int genresIndex = json.indexOf("\"genres\":");
-        if (genresIndex == -1) return "Unknown";
-
-        int nameIndex = json.indexOf("\"name\":", genresIndex);
-        if (nameIndex == -1) return "Unknown";
-
-        int startQuote = json.indexOf("\"", nameIndex + 7) + 1;
-        int endQuote = json.indexOf("\"", startQuote);
-
-        if (startQuote == -1 || endQuote == -1) return "Unknown";
-        return json.substring(startQuote, endQuote);
-    }
-
-    /**
-     * Mengekstrak nama director dari credits JSON response.
-     * Mencari crew member dengan job "Director".
-     *
-     * @param json string JSON credits response
-     * @return nama director, atau "Unknown" jika tidak ditemukan
-     */
-    private static String extractDirector(String json) {
-        String crew = json.substring(json.indexOf("\"crew\":"));
-
-        int jobIndex = crew.indexOf("\"job\":\"Director\"");
-        if (jobIndex == -1) return "Unknown";
-
-        String beforeJob = crew.substring(0, jobIndex);
-        int lastNameIndex = beforeJob.lastIndexOf("\"name\":\"");
-        if (lastNameIndex == -1) return "Unknown";
-
-        int startQuote = lastNameIndex + 8;
-        int endQuote = beforeJob.indexOf("\"", startQuote);
-
-        if (endQuote == -1) {
-            endQuote = crew.indexOf("\"", jobIndex - (beforeJob.length() - startQuote));
+        String director = "Unknown";
+        if (creditsResp.getCrew() != null) {
+            for (TMDBCreditsResponse.Crew crewMember : creditsResp.getCrew()) {
+                if ("Director".equals(crewMember.getJob())) {
+                    director = crewMember.getName();
+                    break;
+                }
+            }
         }
 
-        return beforeJob.substring(startQuote, endQuote);
+        MovieData movieData = new MovieData(title, director, genre, year, synopsis, posterPath);
+
+        // Store to cache
+        movieCache.put(movieId, movieData);
+
+        return movieData;
     }
 
     /**
@@ -149,25 +127,33 @@ public class TMDBService {
      * @return response body sebagai string
      * @throws Exception jika HTTP status bukan 200 atau terjadi error I/O
      */
-    private static String getStringFromURL(String urlString) throws Exception {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("Accept", "application/json");
+    private static String getStringFromURL(String urlString) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
 
-        if (conn.getResponseCode() != 200) {
-            throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed: HTTP error code : " + conn.getResponseCode());
+            }
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+                return response.toString();
+            }
+        } catch (Exception e) {
+            System.err.println("Error requesting URL: " + urlString);
+            throw new RuntimeException("Failed to fetch data from TMDB", e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            response.append(line);
-        }
-        br.close();
-        conn.disconnect();
-
-        return response.toString();
     }
 }

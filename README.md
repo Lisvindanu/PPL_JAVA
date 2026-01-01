@@ -109,7 +109,9 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 
 ## Teknologi yang Digunakan
 
-- **Java SE** - Core language
+- **Java SE 17** - Core language
+- **Maven** - Build tool & Dependency management
+- **JUnit 5 (Jupiter)** - Testing framework
 - **Swing** - GUI framework
 - **TMDB API** - Movie database integration
 - **File I/O** - Data persistence menggunakan text files
@@ -118,7 +120,8 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
 ## Cara Menjalankan Aplikasi
 
 ### Prerequisites
-- Java Development Kit (JDK) 8 atau lebih tinggi
+- Java Development Kit (JDK) 17 atau lebih tinggi
+- Apache Maven 3.6+
 - IntelliJ IDEA (optional, bisa juga command line)
 - Internet connection (untuk fetch data dari TMDB)
 
@@ -130,18 +133,23 @@ Aplikasi ini menggunakan **MVC (Model-View-Controller)** pattern:
    cd PPL_JAVA
    ```
 
-2. **Buka di IntelliJ IDEA**
-   - File → Open → pilih folder project
-   - Wait sampai project indexed
+2. **Build dengan Maven**
+   ```bash
+   mvn clean compile
+   ```
 
-3. **Run aplikasi**
+3. **Menjalankan Unit Tests**
+   ```bash
+   mvn test
+   ```
+
+4. **Run aplikasi**
    - Buka `src/main/MainApp.java`
    - Klik kanan → Run 'MainApp.main()'
 
    Atau via terminal:
    ```bash
-   javac src/main/MainApp.java
-   java -cp src main.MainApp
+   mvn exec:java -Dexec.mainClass="main.MainApp"
    ```
 
 4. **Login**

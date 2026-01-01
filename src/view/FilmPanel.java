@@ -153,22 +153,28 @@ public class FilmPanel extends JPanel {
 
         // Style Add button (Green)
         btnAdd.setBackground(new Color(46, 204, 113));
-        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setForeground(Color.BLACK);
         btnAdd.setFocusPainted(false);
+        btnAdd.setOpaque(true);
+        btnAdd.setBorderPainted(false);
         btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnAdd.addActionListener(e -> addFilm());
 
         // Style Clear button (Blue)
         btnClear.setBackground(new Color(52, 152, 219));
-        btnClear.setForeground(Color.WHITE);
+        btnClear.setForeground(Color.BLACK);
         btnClear.setFocusPainted(false);
+        btnClear.setOpaque(true);
+        btnClear.setBorderPainted(false);
         btnClear.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnClear.addActionListener(e -> clearForm());
 
         // Style Delete button (Red)
         btnDelete.setBackground(new Color(231, 76, 60));
-        btnDelete.setForeground(Color.WHITE);
+        btnDelete.setForeground(Color.BLACK);
         btnDelete.setFocusPainted(false);
+        btnDelete.setOpaque(true);
+        btnDelete.setBorderPainted(false);
         btnDelete.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDelete.addActionListener(e -> deleteFilm());
 

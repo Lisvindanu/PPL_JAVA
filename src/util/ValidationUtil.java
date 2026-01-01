@@ -42,16 +42,6 @@ public class ValidationUtil {
     }
 
     /**
-     * Memvalidasi tahun apakah dalam rentang yang wajar (1900-2100).
-     *
-     * @param year int tahun yang akan divalidasi
-     * @return true jika tahun valid dan dalam rentang, false jika tidak
-     */
-    public static boolean isValidYear(int year) {
-        return year >= 1900 && year <= 2100;
-    }
-
-    /**
      * Mengecek apakah string kosong atau null.
      *
      * @param text string yang akan dicek
@@ -59,87 +49,6 @@ public class ValidationUtil {
      */
     public static boolean isEmpty(String text) {
         return text == null || text.trim().isEmpty();
-    }
-
-    /**
-     * Validasi username (alphanumeric, 3-20 karakter).
-     *
-     * @param username username yang divalidasi
-     * @return true jika valid
-     */
-    public static boolean isValidUsername(String username) {
-        if (username == null) return false;
-        return username.matches("^[a-zA-Z0-9]{3,20}$");
-    }
-
-    /**
-     * Validasi password strength (min 8, huruf besar, huruf kecil, angka).
-     *
-     * @param password password yang divalidasi
-     * @return true jika kuat
-     */
-    public static boolean isValidPasswordStrength(String password) {
-        if (password == null || password.length() < 8) return false;
-        boolean hasUpper = false, hasLower = false, hasDigit = false;
-        for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c)) hasUpper = true;
-            else if (Character.isLowerCase(c)) hasLower = true;
-            else if (Character.isDigit(c)) hasDigit = true;
-        }
-        return hasUpper && hasLower && hasDigit;
-    }
-
-    /**
-     * Mendapatkan deskripsi kekuatan password.
-     *
-     * @param password password yang dicek
-     * @return deskripsi kekuatan
-     */
-    public static String getPasswordStrengthDescription(String password) {
-        if (password == null || password.length() < 6) return "Lemah";
-        
-        boolean hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
-        for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c)) hasUpper = true;
-            else if (Character.isLowerCase(c)) hasLower = true;
-            else if (Character.isDigit(c)) hasDigit = true;
-            else hasSpecial = true;
-        }
-        
-        int score = 0;
-        if (password.length() >= 8) score++;
-        if (hasUpper && hasLower) score++;
-        if (hasDigit) score++;
-        if (hasSpecial) score++;
-        
-        if (score <= 1) return "Sedang";
-        if (score <= 3) return "Kuat";
-        return "Sangat Kuat";
-    }
-
-    /**
-     * Validasi TMDB ID (hanya angka).
-     *
-     * @param tmdbId ID yang divalidasi
-     * @return true jika hanya angka
-     */
-    public static boolean isValidTMDBId(String tmdbId) {
-        if (tmdbId == null || tmdbId.isEmpty()) return false;
-        return tmdbId.matches("^[0-9]+$");
-    }
-
-    /**
-     * Validasi panjang string.
-     *
-     * @param text string yang divalidasi
-     * @param min panjang minimum
-     * @param max panjang maksimum
-     * @return true jika dalam rentang
-     */
-    public static boolean isValidStringLength(String text, int min, int max) {
-        if (text == null) return false;
-        int len = text.length();
-        return len >= min && len <= max;
     }
 
     /**

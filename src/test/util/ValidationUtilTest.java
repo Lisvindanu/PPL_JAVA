@@ -68,7 +68,7 @@ public class ValidationUtilTest {
             int year = 2024;
 
             // Act
-            boolean hasil = ValidationUtil.isValidYear(year);
+            boolean hasil = ValidationUtil.isValidYear(String.valueOf(year));
 
             // Assert
             assertTrue(hasil, "Tahun 2024 harus valid");
@@ -82,7 +82,7 @@ public class ValidationUtilTest {
             int year = 1899;
 
             // Act
-            boolean hasil = ValidationUtil.isValidYear(year);
+            boolean hasil = ValidationUtil.isValidYear(String.valueOf(year));
 
             // Assert
             assertFalse(hasil, "Tahun 1899 harus invalid");

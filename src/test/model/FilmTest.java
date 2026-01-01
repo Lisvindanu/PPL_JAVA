@@ -26,7 +26,7 @@ public class FilmTest {
             boolean visible = true;
 
             // Act
-            Film film = new Film(id, title, director, genre, year, synopsis, visible);
+            Film film = new Film(id, title, director, genre, year, synopsis, "", visible);
 
             // Assert
             assertAll(
@@ -49,7 +49,7 @@ public class FilmTest {
         void testToFileLine() {
             // WHY: Format penyimpanan file harus konsisten untuk menjamin integritas data film
             // Arrange
-            Film film = new Film("1", "Title", "Director", "Genre", 2024, "Synopsis", true);
+            Film film = new Film("1", "Title", "Director", "Genre", 2024, "Synopsis", "", true);
 
             // Act
             String hasil = film.toFileLine();
@@ -64,7 +64,7 @@ public class FilmTest {
             // WHY: Karakter pipe (|) adalah delimiter file; harus di-escape agar tidak merusak struktur parsing
             // Arrange
             String synopsisWithPipe = "Synopsis | with pipe";
-            Film film = new Film("1", "T", "D", "G", 2024, synopsisWithPipe, true);
+            Film film = new Film("1", "T", "D", "G", 2024, synopsisWithPipe, "", true);
 
             // Act
             String hasil = film.toFileLine();
@@ -127,7 +127,7 @@ public class FilmTest {
         void testSetVisibleFalse() {
             // WHY: Admin harus bisa menyembunyikan film tanpa menghapusnya (soft delete)
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
 
             // Act
             film.setVisible(false);
@@ -141,7 +141,7 @@ public class FilmTest {
         void testSetVisibleTrue() {
             // WHY: Admin harus bisa menampilkan kembali film yang sebelumnya disembunyikan
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", false);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", false);
 
             // Act
             film.setVisible(true);
@@ -159,7 +159,7 @@ public class FilmTest {
         void testToTableRowVisible() {
             // WHY: Memastikan status visibility ditampilkan dalam format teks yang user-friendly di tabel
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
 
             // Act
             Object[] row = film.toTableRow();
@@ -177,7 +177,7 @@ public class FilmTest {
         void testSetGetId() {
             // WHY: ID film mungkin perlu diperbarui jika ada sinkronisasi ulang dengan data TMDB
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
             String newId = "2";
 
             // Act
@@ -192,7 +192,7 @@ public class FilmTest {
         void testSetGetTitle() {
             // WHY: Judul film harus dapat dikoreksi jika terdapat kesalahan pengetikan
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
             String newTitle = "New Title";
 
             // Act
@@ -207,7 +207,7 @@ public class FilmTest {
         void testSetGetDirector() {
             // WHY: Informasi sutradara adalah metadata penting untuk filter dan pencarian film
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
             String newDirector = "New Director";
 
             // Act
@@ -222,7 +222,7 @@ public class FilmTest {
         void testSetGetGenre() {
             // WHY: Kategorisasi film melalui genre membantu user dalam menjelajahi koleksi
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
             String newGenre = "Comedy";
 
             // Act
@@ -237,7 +237,7 @@ public class FilmTest {
         void testSetGetYear() {
             // WHY: Tahun rilis membantu user membedakan remake atau film dengan judul serupa
             // Arrange
-            Film film = new Film("1", "T", "D", "G", 2024, "S", true);
+            Film film = new Film("1", "T", "D", "G", 2024, "S", "", true);
             int newYear = 2025;
 
             // Act
